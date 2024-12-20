@@ -1,0 +1,39 @@
+#Thay etherXXX bằng cổng/vlan bridge với nhà mạng, ví dụ ether1, sfp1, vlan11 (nếu phải tag VLAN thì tag VLAN tại Interface -> VLAN sẽ có được tên)...
+#Thay userXXX bằng user PPPoE, passwordXXX bằng password PPPoE
+#Tôi không có nhu cầu và cũng không muốn thu thập thông tin account PPPoE của các bạn, vậy nên dùng Notepad xong chọn cái Replace cho nhanh ^^
+#Script đã được tối ưu để chạy mượt với nhau, vui lòng hạn chế chỉnh sửa, nhiều thứ cho vào không phải "cho đẹp".
+/interface bridge add name=BridgeVRRP
+/interface bridge port add bridge=BridgeVRRP interface=ether2
+/ip address add address=10.255.255.0 interface=BridgeVRRP network=10.255.255.0
+/interface vrrp add interface=BridgeVRRP name=vrrp1 version=2 vrid=1
+/interface bridge nat add action=src-nat chain=srcnat src-mac-address=00:00:5E:00:01:01/FF:FF:FF:FF:FF:FF to-src-mac-address=DC:62:23:9D:E9:A0
+/interface bridge nat add action=dst-nat chain=dstnat dst-mac-address=DC:62:23:9D:E9:A0/FF:FF:FF:FF:FF:FF to-dst-mac-address=00:00:5E:00:01:01
+/ip address add address=10.255.255.1 interface=vrrp1 network=10.255.255.1
+/interface vrrp add interface=BridgeVRRP name=vrrp2 version=2 vrid=2
+/interface bridge nat add action=src-nat chain=srcnat src-mac-address=00:00:5E:00:01:02/FF:FF:FF:FF:FF:FF to-src-mac-address=DC:AD:8F:12:0D:71
+/interface bridge nat add action=dst-nat chain=dstnat dst-mac-address=DC:AD:8F:12:0D:71/FF:FF:FF:FF:FF:FF to-dst-mac-address=00:00:5E:00:01:02
+/ip address add address=10.255.255.2 interface=vrrp2 network=10.255.255.2
+/interface vrrp add interface=BridgeVRRP name=vrrp3 version=2 vrid=3
+/interface bridge nat add action=src-nat chain=srcnat src-mac-address=00:00:5E:00:01:03/FF:FF:FF:FF:FF:FF to-src-mac-address=DC:44:0C:76:A7:82
+/interface bridge nat add action=dst-nat chain=dstnat dst-mac-address=DC:44:0C:76:A7:82/FF:FF:FF:FF:FF:FF to-dst-mac-address=00:00:5E:00:01:03
+/ip address add address=10.255.255.3 interface=vrrp3 network=10.255.255.3
+/interface vrrp add interface=BridgeVRRP name=vrrp4 version=2 vrid=4
+/interface bridge nat add action=src-nat chain=srcnat src-mac-address=00:00:5E:00:01:04/FF:FF:FF:FF:FF:FF to-src-mac-address=DC:26:6E:20:3E:D3
+/interface bridge nat add action=dst-nat chain=dstnat dst-mac-address=DC:26:6E:20:3E:D3/FF:FF:FF:FF:FF:FF to-dst-mac-address=00:00:5E:00:01:04
+/ip address add address=10.255.255.4 interface=vrrp4 network=10.255.255.4
+/interface vrrp add interface=BridgeVRRP name=vrrp5 version=2 vrid=5
+/interface bridge nat add action=src-nat chain=srcnat src-mac-address=00:00:5E:00:01:05/FF:FF:FF:FF:FF:FF to-src-mac-address=DC:9C:6E:2C:C8:D4
+/interface bridge nat add action=dst-nat chain=dstnat dst-mac-address=DC:9C:6E:2C:C8:D4/FF:FF:FF:FF:FF:FF to-dst-mac-address=00:00:5E:00:01:05
+/ip address add address=10.255.255.5 interface=vrrp5 network=10.255.255.5
+/ppp profile add bridge-learning=no change-tcp-mss=yes name=connect use-compression=no use-encryption=no use-upnp=no
+/interface pppoe-client add add-default-route=yes disabled=no interface=vrrp1 name=pppoe-out1 user=user password=password profile=connect max-mru=1500 max-mtu=1500 mrru=2000 default-route-distance=1
+/interface pppoe-client add add-default-route=yes disabled=no interface=vrrp2 name=pppoe-out2 user=user password=password profile=connect max-mru=1500 max-mtu=1500 mrru=2000 default-route-distance=2
+/interface pppoe-client add add-default-route=yes disabled=no interface=vrrp3 name=pppoe-out3 user=user password=password profile=connect max-mru=1500 max-mtu=1500 mrru=2000 default-route-distance=3
+/interface pppoe-client add add-default-route=yes disabled=no interface=vrrp4 name=pppoe-out4 user=user password=password profile=connect max-mru=1500 max-mtu=1500 mrru=2000 default-route-distance=4
+/interface pppoe-client add add-default-route=yes disabled=no interface=vrrp5 name=pppoe-out5 user=user password=password profile=connect max-mru=1500 max-mtu=1500 mrru=2000 default-route-distance=5
+/interface list add name=Cong-Ethernet
+:foreach tda in=[/interface ethernet find] do={ :local tdaname [/interface ethernet get $tda name]; /interface list member add interface=$tdaname list=Cong-Ethernet; }
+/ip neighbor discovery-settings set discover-interface-list=Cong-Ethernet
+#Xong 14:09:02 15/01/2024 exec: 0.000430s
+#Làm xong PPPoE không chạy hoặc trả về IP ảo thì chúc mừng là khu của bạn đã bị fix.
+#Cần cân bằng tải thì back lại tạo tiếp script ^^
