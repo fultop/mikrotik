@@ -1,0 +1,18 @@
+#Thay etherXXX bằng cổng bridge với nhà mạng, ví dụ ether1, sfp1
+#Thay MACZZZ bằng địa chỉ MAC của modem gốc, có dạng xx:xx:xx:xx:xx:xx
+#Thay userXXX bằng user PPPoE, passwordXXX bằng password PPPoE
+#Tôi không có nhu cầu và cũng không muốn thu thập thông tin account PPPoE của các bạn, vậy nên dùng Notepad xong chọn cái Replace cho nhanh ^^
+#Script đã được tối ưu để chạy mượt với nhau, vui lòng hạn chế chỉnh sửa, nhiều thứ cho vào không phải "cho đẹp".
+/interface ethernet set ether2 mac-address=DC:2C:6E:AA:E2:2C
+/ppp profile add bridge-learning=no change-tcp-mss=yes name=connect use-compression=no use-encryption=no use-upnp=no
+/interface pppoe-client add add-default-route=yes disabled=no interface=ether2 name=pppoe-out1 user=user password=password profile=connect max-mru=1500 max-mtu=1500 mrru=1500 default-route-distance=1
+/interface pppoe-client add add-default-route=yes disabled=no interface=ether2 name=pppoe-out2 user=user password=password profile=connect max-mru=1500 max-mtu=1500 mrru=1500 default-route-distance=2
+/interface pppoe-client add add-default-route=yes disabled=no interface=ether2 name=pppoe-out3 user=user password=password profile=connect max-mru=1500 max-mtu=1500 mrru=1500 default-route-distance=3
+/interface pppoe-client add add-default-route=yes disabled=no interface=ether2 name=pppoe-out4 user=user password=password profile=connect max-mru=1500 max-mtu=1500 mrru=1500 default-route-distance=4
+/interface pppoe-client add add-default-route=yes disabled=no interface=ether2 name=pppoe-out5 user=user password=password profile=connect max-mru=1500 max-mtu=1500 mrru=1500 default-route-distance=5
+/interface list add name=Cong-Ethernet
+:foreach tda in=[/interface ethernet find] do={ :local tdaname [/interface ethernet get $tda name]; /interface list member add interface=$tdaname list=Cong-Ethernet; }
+/ip neighbor discovery-settings set discover-interface-list=Cong-Ethernet
+#Xong 14:08:36 15/01/2024 exec: 0.000118s
+#Lưu ý: số lượng luồng PPPoE mạng 3 chữ có thể cheat là hên xui, mỗi khu mỗi kiểu.
+#Cần cân bằng tải thì back lại tạo tiếp script ^^

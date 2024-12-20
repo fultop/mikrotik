@@ -1,0 +1,54 @@
+#Cấu hình PPPoE, DNS, IP LAN, DHCP trước, sau đó dùng "thần chú" 
+#Yêu cầu Bridge của mạng LAN đặt tên là BridgeLAN và các interface 
+#PPPoE dạng pppoe-out1, pppoe-out2,...
+#5wan src-address gop max
+#Tăt Fasttrack
+#
+# 
+
+/interface list add name=LAN
+/interface list member add interface=BridgeLAN list=LAN
+/ip firewall address-list add address=10.0.0.0/8 list=LAN
+/ip firewall address-list add address=172.16.0.0/12 list=LAN
+/ip firewall address-list add address=192.168.0.0/16 list=LAN
+/ip firewall address-list add address=224.0.0.0/4 list=LAN
+/ip firewall address-list add address=255.255.255.255 list=LAN
+/ip firewall nat add chain=srcnat action=masquerade out-interface=all-ppp
+/ip firewall mangle add action=accept chain=prerouting dst-address-list=LAN in-interface-list=LAN
+/ipv6 settings set accept-redirects=no accept-router-advertisements=no disable-ipv6=yes forward=no
+/ip firewall mangle add action=mark-connection chain=input connection-mark=no-mark in-interface=pppoe-out1 new-connection-mark=INP1 passthrough=yes
+/ip firewall mangle add action=mark-connection chain=forward connection-mark=no-mark src-address-list=!LAN in-interface=pppoe-out1 new-connection-mark=INP1 passthrough=yes
+/ip firewall mangle add action=mark-connection chain=input connection-mark=no-mark in-interface=pppoe-out2 new-connection-mark=INP2 passthrough=yes
+/ip firewall mangle add action=mark-connection chain=forward connection-mark=no-mark src-address-list=!LAN in-interface=pppoe-out2 new-connection-mark=INP2 passthrough=yes
+/ip firewall mangle add action=mark-connection chain=input connection-mark=no-mark in-interface=pppoe-out3 new-connection-mark=INP3 passthrough=yes
+/ip firewall mangle add action=mark-connection chain=forward connection-mark=no-mark src-address-list=!LAN in-interface=pppoe-out3 new-connection-mark=INP3 passthrough=yes
+/ip firewall mangle add action=mark-connection chain=input connection-mark=no-mark in-interface=pppoe-out4 new-connection-mark=INP4 passthrough=yes
+/ip firewall mangle add action=mark-connection chain=forward connection-mark=no-mark src-address-list=!LAN in-interface=pppoe-out4 new-connection-mark=INP4 passthrough=yes
+/ip firewall mangle add action=mark-connection chain=input connection-mark=no-mark in-interface=pppoe-out5 new-connection-mark=INP5 passthrough=yes
+/ip firewall mangle add action=mark-connection chain=forward connection-mark=no-mark src-address-list=!LAN in-interface=pppoe-out5 new-connection-mark=INP5 passthrough=yes
+/ip firewall mangle add action=mark-connection chain=prerouting connection-mark=no-mark dst-address-type=!local in-interface-list=LAN new-connection-mark=WAN1 passthrough=yes per-connection-classifier=both-addresses-and-ports:5/0
+/ip firewall mangle add action=mark-connection chain=prerouting connection-mark=no-mark dst-address-type=!local in-interface-list=LAN new-connection-mark=WAN2 passthrough=yes per-connection-classifier=both-addresses-and-ports:5/1
+/ip firewall mangle add action=mark-connection chain=prerouting connection-mark=no-mark dst-address-type=!local in-interface-list=LAN new-connection-mark=WAN3 passthrough=yes per-connection-classifier=both-addresses-and-ports:5/2
+/ip firewall mangle add action=mark-connection chain=prerouting connection-mark=no-mark dst-address-type=!local in-interface-list=LAN new-connection-mark=WAN4 passthrough=yes per-connection-classifier=both-addresses-and-ports:5/3
+/ip firewall mangle add action=mark-connection chain=prerouting connection-mark=no-mark dst-address-type=!local in-interface-list=LAN new-connection-mark=WAN5 passthrough=yes per-connection-classifier=both-addresses-and-ports:5/4
+/ip firewall mangle add action=mark-routing chain=prerouting connection-mark=WAN1 in-interface-list=LAN new-routing-mark=WAN1 passthrough=no
+/ip firewall mangle add action=mark-routing chain=prerouting connection-mark=WAN2 in-interface-list=LAN new-routing-mark=WAN2 passthrough=no
+/ip firewall mangle add action=mark-routing chain=prerouting connection-mark=WAN3 in-interface-list=LAN new-routing-mark=WAN3 passthrough=no
+/ip firewall mangle add action=mark-routing chain=prerouting connection-mark=WAN4 in-interface-list=LAN new-routing-mark=WAN4 passthrough=no
+/ip firewall mangle add action=mark-routing chain=prerouting connection-mark=WAN5 in-interface-list=LAN new-routing-mark=WAN5 passthrough=no
+/ip firewall mangle add action=mark-routing chain=output connection-mark=INP1 new-routing-mark=WAN1 passthrough=no
+/ip firewall mangle add action=mark-routing chain=prerouting connection-mark=INP1 src-address-list=LAN new-routing-mark=WAN1 passthrough=yes
+/ip firewall mangle add action=mark-routing chain=output connection-mark=INP2 new-routing-mark=WAN2 passthrough=no
+/ip firewall mangle add action=mark-routing chain=prerouting connection-mark=INP2 src-address-list=LAN new-routing-mark=WAN2 passthrough=yes
+/ip firewall mangle add action=mark-routing chain=output connection-mark=INP3 new-routing-mark=WAN3 passthrough=no
+/ip firewall mangle add action=mark-routing chain=prerouting connection-mark=INP3 src-address-list=LAN new-routing-mark=WAN3 passthrough=yes
+/ip firewall mangle add action=mark-routing chain=output connection-mark=INP4 new-routing-mark=WAN4 passthrough=no
+/ip firewall mangle add action=mark-routing chain=prerouting connection-mark=INP4 src-address-list=LAN new-routing-mark=WAN4 passthrough=yes
+/ip firewall mangle add action=mark-routing chain=output connection-mark=INP5 new-routing-mark=WAN5 passthrough=no
+/ip firewall mangle add action=mark-routing chain=prerouting connection-mark=INP5 src-address-list=LAN new-routing-mark=WAN5 passthrough=yes
+/ip route add dst-address=0.0.0.0/0 gateway=pppoe-out1 routing-mark=WAN1 check-gateway=ping
+/ip route add dst-address=0.0.0.0/0 gateway=pppoe-out2 routing-mark=WAN2 check-gateway=ping
+/ip route add dst-address=0.0.0.0/0 gateway=pppoe-out3 routing-mark=WAN3 check-gateway=ping
+/ip route add dst-address=0.0.0.0/0 gateway=pppoe-out4 routing-mark=WAN4 check-gateway=ping
+/ip route add dst-address=0.0.0.0/0 gateway=pppoe-out5 routing-mark=WAN5 check-gateway=ping
+#Xong 14:00:34 15/01/2024 exec: 0.000178s
